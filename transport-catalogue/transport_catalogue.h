@@ -45,9 +45,9 @@ public:
     double real_route_length;
     };
     
-    void AddStop(Stop stop);
+    void AddStop(const Stop& stop);
     
-    void AddBus(Bus bus);
+    void AddBus(const Bus& bus);
     
     void SetDistanceBetweenStops(const Stop* src, const Stop* dst, int64_t distance);
     

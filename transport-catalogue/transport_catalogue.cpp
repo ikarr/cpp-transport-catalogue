@@ -3,12 +3,12 @@
 namespace transport_catalogue {
 using namespace std;
 
-void TransportCatalogue::AddStop(Stop stop) {
+void TransportCatalogue::AddStop(const Stop& stop) {
     stops_.push_back(stop);
     pointers_to_stops_[stops_.back().name] = &stops_.back();
 }
 
-void TransportCatalogue::AddBus(Bus bus) {
+void TransportCatalogue::AddBus(const Bus& bus) {
     buses_.push_back(bus);
     pointers_to_buses_[buses_.back().name] = &buses_.back();
 }
