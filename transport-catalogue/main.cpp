@@ -1,9 +1,12 @@
-#include "input_reader.h"
-#include "stat_reader.h"
-#include "transport_catalogue.h"
+#include "json_reader.h"
 
 int main() {
-    transport_catalogue::TransportCatalogue catalogue;
-    transport_catalogue::input_reader::RequestProcess(catalogue, std::cin);
-    transport_catalogue::stat_reader::RequestProcess(catalogue, std::cin, std::cout);
+    using namespace catalogue;
+    using namespace json_rd;
+    using namespace handler;
+    using namespace renderer;
+    TransportCatalogue catalogue;
+    MapRenderer renderer;
+    RequestHandler handler(catalogue, renderer);
+    ReadJSON(std::cin, std::cout, catalogue, renderer, handler);
 }
