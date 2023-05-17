@@ -4,8 +4,8 @@ namespace catalogue {
     
 namespace handler {
 
-RequestHandler::RequestHandler(const TransportCatalogue& db, const renderer::MapRenderer& renderer)
-    : db_(db), renderer_(renderer) {}
+RequestHandler::RequestHandler(const TransportCatalogue& db, JsonReader& reader, MapRenderer& renderer)
+    : db_(db), json_rd_(reader), renderer_(renderer) {}
     
 void RequestHandler::MakeResponse(std::ostream& out, const json::Node& stat_requests) {
     json::Array requests_array = stat_requests.AsArray();
@@ -25,6 +25,19 @@ void RequestHandler::MakeResponse(std::ostream& out, const json::Node& stat_requ
     json::Print(json::Document{response}, out);
 }
 
+void RequestHandler::ReadJSON(std::istream& input, std::ostream& out) {
+    json::Document input_requests = json::Load(input);
+    for (const auto& [type, requests] : input_requests.GetRoot().AsDict()) {
+        if (type == "base_requests") {
+            json_rd_.ReadBaseRequests(requests);
+        } else if (type == "render_settings") {
+            json_rd_.SetRenderSettings(renderer_, requests);
+        } else if (type == "stat_requests") {
+            MakeResponse(out, requests);
+        }
+    }
+}
+    
 json::Dict RequestHandler::BuildBusStat(int request_id, const std::optional<BusStat>& bus_stat) {
     using namespace std::literals;
     json::Dict stat;

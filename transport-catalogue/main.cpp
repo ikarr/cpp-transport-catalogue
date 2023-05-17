@@ -1,4 +1,4 @@
-#include "json_reader.h"
+#include "request_handler.h"
 
 int main() {
     using namespace catalogue;
@@ -6,7 +6,8 @@ int main() {
     using namespace handler;
     using namespace renderer;
     TransportCatalogue catalogue;
+    JsonReader reader(catalogue);
     MapRenderer renderer;
-    RequestHandler handler(catalogue, renderer);
-    ReadJSON(std::cin, std::cout, catalogue, renderer, handler);
+    RequestHandler handler(catalogue, reader, renderer);
+    handler.ReadJSON(std::cin, std::cout);
 }
