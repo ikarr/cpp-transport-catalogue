@@ -3,6 +3,8 @@
 namespace json {
 using namespace std::literals;
 
+Node::Node(Value value) : Value(value) {}
+    
 bool Node::IsInt() const { return std::holds_alternative<int>(*this); }
 bool Node::IsPureDouble() const { return std::holds_alternative<double>(*this); }
 bool Node::IsDouble() const { return IsInt() || IsPureDouble(); }

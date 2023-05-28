@@ -1,7 +1,6 @@
 #include "json_reader.h"
 
 namespace catalogue {
-    
 namespace json_rd {
 
 JsonReader::JsonReader(TransportCatalogue& catalogue) : db_(catalogue) {}

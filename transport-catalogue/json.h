@@ -19,10 +19,12 @@ public:
 
 using Value = std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>;
     
-class Node : Value {
+class Node : private Value {
 public:
     using variant::variant;
     using Value = variant;
+    
+    Node(Value value);
 
     bool IsInt() const;
     bool IsPureDouble() const;

@@ -1,28 +1,32 @@
 #include "request_handler.h"
 
 namespace catalogue {
-    
 namespace handler {
 
-RequestHandler::RequestHandler(const TransportCatalogue& db, JsonReader& reader, MapRenderer& renderer)
-    : db_(db), json_rd_(reader), renderer_(renderer) {}
+RequestHandler::RequestHandler(const TransportCatalogue& db,
+                               json::Builder& builder,
+                               JsonReader& reader,
+                               MapRenderer& renderer)
+    : db_(db), builder_(builder), json_rd_(reader), renderer_(renderer) {}
     
 void RequestHandler::MakeResponse(std::ostream& out, const json::Node& stat_requests) {
     json::Array requests_array = stat_requests.AsArray();
     if (stat_requests.AsArray().empty()) { return; }
     
-    json::Array response;
+    json::Builder builder;
+    builder.StartArray();
     for (const auto& element : requests_array) {
         json::Dict request = element.AsDict();
         if (request["type"].AsString() == "Bus") {
-            response.emplace_back(BuildBusStat(request["id"].AsInt(), GetBusStat(request["name"].AsString())));
+            BuildBusStat(builder, request["id"].AsInt(), GetBusStat(request["name"].AsString()));
         } else if (request["type"].AsString() == "Stop") {
-            response.emplace_back(BuildStopInfo(request["id"].AsInt(), GetBusesByStop(request["name"].AsString())));
+            BuildStopInfo(builder, request["id"].AsInt(), GetBusesByStop(request["name"].AsString()));
         } else if (request["type"].AsString() == "Map") {
-            response.emplace_back(BuildRenderredMap(request["id"].AsInt(), PrintMap()));
+            BuildRenderredMap(builder, request["id"].AsInt(), PrintMap());
         }
     }
-    json::Print(json::Document{response}, out);
+    builder.EndArray();
+    json::Print(json::Document{builder.Build()}, out);
 }
 
 void RequestHandler::ReadJSON(std::istream& input, std::ostream& out) {
@@ -38,50 +42,57 @@ void RequestHandler::ReadJSON(std::istream& input, std::ostream& out) {
     }
 }
     
-json::Dict RequestHandler::BuildBusStat(int request_id, const std::optional<BusStat>& bus_stat) {
+void RequestHandler::BuildBusStat(json::Builder& builder, int request_id, const std::optional<BusStat>& bus_stat) {
     using namespace std::literals;
-    json::Dict stat;
     if (bus_stat) {
-        stat.emplace("curvature"s, bus_stat.value().real_route_length / bus_stat.value().route_length);
-        stat.emplace("request_id"s, request_id);
-        stat.emplace("route_length"s, bus_stat.value().real_route_length);
-        stat.emplace("stop_count"s, bus_stat.value().stops_count);
-        stat.emplace("unique_stop_count"s, bus_stat.value().unique_stops_count);
+        builder.StartDict()
+            .Key("curvature"s).Value(bus_stat.value().real_route_length / bus_stat.value().route_length)
+            .Key("request_id"s).Value(request_id)
+            .Key("route_length"s).Value(bus_stat.value().real_route_length)
+            .Key("stop_count"s).Value(bus_stat.value().stops_count)
+            .Key("unique_stop_count"s).Value(bus_stat.value().unique_stops_count)
+            .EndDict();
     } else {
-        stat.emplace("request_id"s, request_id);
-        stat.emplace("error_message"s, "not found"s);
+        builder.StartDict()
+            .Key("request_id"s).Value(request_id)
+            .Key("error_message"s).Value("not found"s)
+            .EndDict();
     }
-    return stat;
 }
 
-json::Dict RequestHandler::BuildStopInfo(int request_id, const Buses& buses) {
+void RequestHandler::BuildStopInfo(json::Builder& builder, int request_id, const Buses& buses) {
     using namespace std::literals;
-    json::Dict stop_info;
     if (buses) {
-        json::Array buses_list;
+        builder.StartDict();
+        builder.Key("buses"s);
+        builder.StartArray();
         for (const auto& bus : buses.value()) {
-            buses_list.emplace_back(std::string(bus));
-        };
-        stop_info.emplace("buses"s, buses_list);
-        stop_info.emplace("request_id"s, request_id);
+            builder.Value(std::string(bus));
+        }
+        builder.EndArray();
+        builder.Key("request_id"s).Value(request_id);
+        builder.EndDict();
     } else {
-        stop_info.emplace("request_id"s, request_id);
-        stop_info.emplace("error_message"s, "not found"s);
+        builder.StartDict()
+            .Key("request_id"s).Value(request_id)
+            .Key("error_message"s).Value("not found"s)
+            .EndDict();
     }
-    return stop_info;
 }
 
-json::Dict RequestHandler::BuildRenderredMap(int request_id, const std::ostringstream& map) {
+void RequestHandler::BuildRenderredMap(json::Builder& builder, int request_id, const std::ostringstream& map) {
     using namespace std::literals;
-    json::Dict renderred_map;
     if (map) {
-        renderred_map.emplace("map"s, map.str());
-        renderred_map.emplace("request_id"s, request_id);
+        builder.StartDict()
+            .Key("map"s).Value(map.str())
+            .Key("request_id"s).Value(request_id)
+            .EndDict();
     } else {
-        renderred_map.emplace("request_id"s, request_id);
-        renderred_map.emplace("error_message"s, "not found"s);
+        builder.StartDict()
+        .Key("request_id"s).Value(request_id)
+        .Key("error_message"s).Value("not found"s)
+        .EndDict();
     }
-    return renderred_map;
 }
 
 std::ostringstream RequestHandler::PrintMap() const {
@@ -101,6 +112,5 @@ std::optional<BusStat> RequestHandler::GetBusStat(std::string_view bus_name) con
 Buses RequestHandler::GetBusesByStop(std::string_view stop) const {
     return db_.GetBusesByStop(stop);
 }
-    
 } // namespace handler
 } // namespace catalogue

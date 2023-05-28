@@ -1,26 +1,27 @@
 #pragma once
+#include "json_builder.h"
 #include "json_reader.h"
 #include "map_renderer.h"
 
 namespace catalogue {
-    
 namespace handler {
+    
 using namespace json_rd;
 using namespace renderer;
     
 class RequestHandler {
 public:
-    RequestHandler(const TransportCatalogue& db, JsonReader& reader, MapRenderer& renderer);
+    RequestHandler(const TransportCatalogue& db, json::Builder& builder, JsonReader& reader, MapRenderer& renderer);
     
     void MakeResponse(std::ostream& out, const json::Node& stat_requests);
     
     void ReadJSON(std::istream& input, std::ostream& out);
     
-    json::Dict BuildBusStat(int request_id, const std::optional<BusStat>& bus_stat);
+    void BuildBusStat(json::Builder& builder, int request_id, const std::optional<BusStat>& bus_stat);
     
-    json::Dict BuildStopInfo(int request_id, const Buses& buses);
+    void BuildStopInfo(json::Builder& builder, int request_id, const Buses& buses);
     
-    json::Dict BuildRenderredMap(int request_id, const std::ostringstream& map);
+    void BuildRenderredMap(json::Builder& builder, int request_id, const std::ostringstream& map);
     
     std::ostringstream PrintMap() const;
     
@@ -30,6 +31,7 @@ public:
     
 private:
     const TransportCatalogue& db_;
+    json::Builder& builder_;
     JsonReader& json_rd_;
     MapRenderer& renderer_;
 };
