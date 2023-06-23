@@ -9,6 +9,7 @@ int main() {
     json::Builder builder;
     JsonReader reader(catalogue);
     MapRenderer renderer;
-    RequestHandler handler(catalogue, builder, reader, renderer);
+    TransportRouter router(catalogue);
+    RequestHandler handler(catalogue, builder, reader, renderer, router);
     handler.ReadJSON(std::cin, std::cout);
 }

@@ -6,8 +6,9 @@ namespace handler {
 RequestHandler::RequestHandler(const TransportCatalogue& db,
                                json::Builder& builder,
                                JsonReader& reader,
-                               MapRenderer& renderer)
-    : db_(db), builder_(builder), json_rd_(reader), renderer_(renderer) {}
+                               MapRenderer& renderer,
+                               TransportRouter& router)
+    : db_(db), builder_(builder), json_rd_(reader), renderer_(renderer), router_(router) {}
     
 void RequestHandler::MakeResponse(std::ostream& out, const json::Node& stat_requests) {
     json::Array requests_array = stat_requests.AsArray();
@@ -23,6 +24,8 @@ void RequestHandler::MakeResponse(std::ostream& out, const json::Node& stat_requ
             BuildStopInfo(builder, request["id"].AsInt(), GetBusesByStop(request["name"].AsString()));
         } else if (request["type"].AsString() == "Map") {
             BuildRenderredMap(builder, request["id"].AsInt(), PrintMap());
+        } else if (request["type"].AsString() == "Route") {
+            BuildRoutes(builder, request["id"].AsInt(), GetRouteByStops(request["from"].AsString(), request["to"].AsString()));
         }
     }
     builder.EndArray();
@@ -36,7 +39,10 @@ void RequestHandler::ReadJSON(std::istream& input, std::ostream& out) {
             json_rd_.ReadBaseRequests(requests);
         } else if (type == "render_settings") {
             json_rd_.SetRenderSettings(renderer_, requests);
+        } else if (type == "routing_settings") {
+            json_rd_.SetRoutingSettings(router_, requests);
         } else if (type == "stat_requests") {
+            router_.BuildAllRoutes();
             MakeResponse(out, requests);
         }
     }
@@ -95,6 +101,44 @@ void RequestHandler::BuildRenderredMap(json::Builder& builder, int request_id, c
     }
 }
 
+void RequestHandler::InsertRouteItem(json::Builder& builder,const Item& item) {
+    if (item.type == ItemType::WAIT) {
+        builder.StartDict()
+                .Key("type").Value("Wait")
+                .Key("stop_name").Value(std::string(item.name))
+                .Key("time").Value(item.time)
+            .EndDict();
+    } else if (item.type == ItemType::BUS) {
+        builder.StartDict()
+                .Key("type").Value("Bus")
+                .Key("bus").Value(std::string(item.name))
+                .Key("span_count").Value(item.span_count)
+                .Key("time").Value(item.time)
+            .EndDict();
+    }
+}
+    
+void RequestHandler::BuildRoutes(json::Builder& builder, int request_id, const std::optional<RouteItems>& items) {
+    using namespace std::literals;
+    if (items) {
+        builder.StartDict()
+            .Key("request_id").Value(request_id)
+            .Key("total_time").Value(items.value().total_time)
+            .Key("items")
+            .StartArray();
+        for (const auto& item : items.value().items) {
+            InsertRouteItem(builder, item);
+        }
+        builder.EndArray();
+        builder.EndDict();
+    } else {
+        builder.StartDict()
+                    .Key("request_id"s).Value(request_id)
+                    .Key("error_message"s).Value("not found"s)
+                .EndDict();
+    }
+}
+    
 std::ostringstream RequestHandler::PrintMap() const {
     std::ostringstream svg;
     svg::Document doc = renderer_.RenderMap(db_.GetAllBuses());
@@ -112,5 +156,10 @@ std::optional<BusStat> RequestHandler::GetBusStat(std::string_view bus_name) con
 Buses RequestHandler::GetBusesByStop(std::string_view stop) const {
     return db_.GetBusesByStop(stop);
 }
+    
+std::optional<RouteItems> RequestHandler::GetRouteByStops(std::string_view start_stop, std::string_view finish_stop) const {
+    return router_.GetRoute(db_.GetStop(start_stop), db_.GetStop(finish_stop));
+}
+    
 } // namespace handler
 } // namespace catalogue

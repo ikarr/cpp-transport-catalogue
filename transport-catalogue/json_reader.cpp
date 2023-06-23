@@ -64,6 +64,12 @@ void JsonReader::SetRenderSettings(renderer::MapRenderer& renderer, const json::
     renderer.SetSettings(render_settings);
 }
 
+void JsonReader::SetRoutingSettings(TransportRouter& router, const json::Node& base_requests) {
+    json::Dict routing_settings = base_requests.AsDict();
+    router.SetSettings({routing_settings.at("bus_wait_time").AsInt(),
+                        routing_settings.at("bus_velocity").AsDouble()});
+}
+    
 void JsonReader::ReadBaseRequests(const json::Node& base_requests) {
     IdentifiedRequests identified;
     for (const auto& element : base_requests.AsArray()) {

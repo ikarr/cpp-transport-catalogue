@@ -88,5 +88,9 @@ const std::map<std::string_view, const Bus*>& TransportCatalogue::GetAllBuses() 
 const std::unordered_map<std::string_view, const Stop*>& TransportCatalogue::GetAllStops() const {
     return stop_names_to_ptrs_;
 }
+    
+size_t TransportCatalogue::GetStopsCount() const {
+    return stops_.size();
+}
 
 } // namespace catalogue

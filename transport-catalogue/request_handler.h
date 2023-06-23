@@ -11,7 +11,11 @@ using namespace renderer;
     
 class RequestHandler {
 public:
-    RequestHandler(const TransportCatalogue& db, json::Builder& builder, JsonReader& reader, MapRenderer& renderer);
+    RequestHandler(const TransportCatalogue& db,
+                   json::Builder& builder,
+                   JsonReader& reader,
+                   MapRenderer& renderer,
+                   TransportRouter& router);
     
     void MakeResponse(std::ostream& out, const json::Node& stat_requests);
     
@@ -23,17 +27,24 @@ public:
     
     void BuildRenderredMap(json::Builder& builder, int request_id, const std::ostringstream& map);
     
+    void InsertRouteItem(json::Builder& builder, const Item& item);
+    
+    void BuildRoutes(json::Builder& builder, int request_id, const std::optional<RouteItems>& items);
+    
     std::ostringstream PrintMap() const;
     
     std::optional<BusStat> GetBusStat(std::string_view bus_name) const;
     
     Buses GetBusesByStop(std::string_view stop) const;
     
+    std::optional<RouteItems> GetRouteByStops(std::string_view start_stop, std::string_view finish_stop) const;
+    
 private:
     const TransportCatalogue& db_;
     json::Builder& builder_;
     JsonReader& json_rd_;
     MapRenderer& renderer_;
+    TransportRouter& router_;
 };
     
 } // namespace handler
