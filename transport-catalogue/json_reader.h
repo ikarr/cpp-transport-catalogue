@@ -3,6 +3,7 @@
 #include "map_renderer.h"
 #include "transport_catalogue.h"
 #include "transport_router.h"
+#include "serialization.h"
 
 namespace catalogue {
     
@@ -15,9 +16,11 @@ public:
     
     void SetRealDistance(const json::Dict& new_stops);
     
-    void SetRenderSettings(MapRenderer& renderer, const json::Node& map_settings);
+    void SetRenderSettings(MapRenderer& renderer, const json::Node& settings);
     
-    void SetRoutingSettings(TransportRouter& router, const json::Node& base_requests);
+    void SetRoutingSettings(TransportRouter& router, const json::Node& settings);
+    
+    void SetSerializationSettings(Serializer& serializer, const json::Node& settings);
     
     void ReadBaseRequests(const json::Node& base_requests);
     

@@ -7,8 +7,46 @@ RequestHandler::RequestHandler(const TransportCatalogue& db,
                                json::Builder& builder,
                                JsonReader& reader,
                                MapRenderer& renderer,
-                               TransportRouter& router)
-    : db_(db), builder_(builder), json_rd_(reader), renderer_(renderer), router_(router) {}
+                               TransportRouter& router,
+                               Serializer& serializer)
+    : db_(db), builder_(builder), json_rd_(reader), renderer_(renderer), router_(router), serializer_(serializer) {}
+
+void RequestHandler::MakeBase(TransportCatalogue& catalogue,
+                            std::istream& input,
+                            MapRenderer& renderer,
+                            TransportRouter& router,
+                            Serializer& serializer) {
+    json::Document input_requests = json::Load(input);
+    for (const auto& [type, requests] : input_requests.GetRoot().AsDict()) {
+        if (type == "base_requests") {
+            json_rd_.ReadBaseRequests(requests);
+        } else if (type == "render_settings"){
+            json_rd_.SetRenderSettings(renderer_, requests);
+        } else if (type == "routing_settings"){
+            json_rd_.SetRoutingSettings(router_, requests);
+        } else if (type == "serialization_settings"){
+            json_rd_.SetSerializationSettings(serializer, requests);
+        }
+    }
+    serializer.SerializeBase();
+}
+
+void RequestHandler::ProcessRequests(TransportCatalogue& catalogue,
+                    std::istream& input,
+                    std::ostream& out,
+                    TransportRouter& router,
+                    Serializer& serializer) {
+    json::Document input_requests = json::Load(input);
+    for (const auto& [type, requests] : input_requests.GetRoot().AsDict()) {
+        if (type == "stat_requests") {
+            serializer.DeserializeBase();
+            router.BuildAllRoutes();
+            MakeResponse(out, requests);
+        } else if (type == "serialization_settings"){
+            json_rd_.SetSerializationSettings(serializer, requests);
+        }
+    }
+}
     
 void RequestHandler::MakeResponse(std::ostream& out, const json::Node& stat_requests) {
     json::Array requests_array = stat_requests.AsArray();
@@ -32,22 +70,6 @@ void RequestHandler::MakeResponse(std::ostream& out, const json::Node& stat_requ
     json::Print(json::Document{builder.Build()}, out);
 }
 
-void RequestHandler::ReadJSON(std::istream& input, std::ostream& out) {
-    json::Document input_requests = json::Load(input);
-    for (const auto& [type, requests] : input_requests.GetRoot().AsDict()) {
-        if (type == "base_requests") {
-            json_rd_.ReadBaseRequests(requests);
-        } else if (type == "render_settings") {
-            json_rd_.SetRenderSettings(renderer_, requests);
-        } else if (type == "routing_settings") {
-            json_rd_.SetRoutingSettings(router_, requests);
-        } else if (type == "stat_requests") {
-            router_.BuildAllRoutes();
-            MakeResponse(out, requests);
-        }
-    }
-}
-    
 void RequestHandler::BuildBusStat(json::Builder& builder, int request_id, const std::optional<BusStat>& bus_stat) {
     using namespace std::literals;
     if (bus_stat) {

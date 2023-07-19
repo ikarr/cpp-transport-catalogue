@@ -24,10 +24,11 @@ void TransportRouter::AddEdgeToItem(graph::VertexId start_vertex, graph::VertexI
 }
 
 void TransportRouter::AddBusEdge(const Stop* start_stop, const Stop* finish_stop, std::string_view bus_name, int span, double distance) {
+    double coeff = 1000 / 60.0; // коэффициент перевода ЕИ скорости из км/ч в м/мин
     Item item;
     item.type = ItemType::BUS;
     item.name = bus_name;
-    item.time = distance / (bus_velocity_ * 1000 / 60);
+    item.time = distance / (bus_velocity_ * coeff);
     item.span_count = span;
     AddEdgeToItem(GetStartBusVertex(start_stop), GetStartWaitVertex(finish_stop), item);
 }

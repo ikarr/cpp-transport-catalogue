@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package tcat_serialized;
+
+import "map_renderer.proto";
+import "transport_router.proto";
+
+message Coordinates {
+    double lat = 1;
+    double lng = 2;
+}
+
+message Stop {
+    string name = 1;
+    Coordinates coordinates = 2;
+}
+
+message Bus {
+    string name = 1;
+    repeated uint64 stops = 2;
+    bool is_roundtrip = 3;
+}
+
+message Distance {
+    uint64 src = 1;
+    uint64 dst = 2;
+    int64 distance = 3;
+}
+
+message TransportCatalogue {
+    repeated Bus buses = 1;
+    map<uint64, Stop> stops = 2;
+    repeated Distance distances = 3;
+    RenderSettings render_settings = 4;
+    RouterSettings router_settings = 5;
+}

@@ -15,5 +15,4 @@ double ComputeDistance(Coordinates from, Coordinates to) {
                 + cos(from.lat * dr) * cos(to.lat * dr)
                 * cos(abs(from.lng - to.lng) * dr)) * mean_earth_rad;
 }
-
 } // namespace geo

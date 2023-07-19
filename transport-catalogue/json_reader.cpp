@@ -39,8 +39,8 @@ void JsonReader::SetRealDistance(const json::Dict& new_stops) {
     }
 }
     
-void JsonReader::SetRenderSettings(renderer::MapRenderer& renderer, const json::Node& map_settings) {
-    json::Dict raw_settings = map_settings.AsDict();
+void JsonReader::SetRenderSettings(renderer::MapRenderer& renderer, const json::Node& settings) {
+    json::Dict raw_settings = settings.AsDict();
     std::vector<svg::Color> color_palette;
     for (const auto& raw_color: raw_settings.at("color_palette").AsArray()) {
         color_palette.push_back(renderer.SetColor(raw_color));
@@ -64,10 +64,15 @@ void JsonReader::SetRenderSettings(renderer::MapRenderer& renderer, const json::
     renderer.SetSettings(render_settings);
 }
 
-void JsonReader::SetRoutingSettings(TransportRouter& router, const json::Node& base_requests) {
-    json::Dict routing_settings = base_requests.AsDict();
+void JsonReader::SetRoutingSettings(TransportRouter& router, const json::Node& settings) {
+    json::Dict routing_settings = settings.AsDict();
     router.SetSettings({routing_settings.at("bus_wait_time").AsInt(),
                         routing_settings.at("bus_velocity").AsDouble()});
+}
+
+void JsonReader::SetSerializationSettings(Serializer& serializer, const json::Node& settings) {
+    json::Dict serialization_settings = settings.AsDict();
+    serializer.SetSettings(serialization_settings.at("file").AsString());
 }
     
 void JsonReader::ReadBaseRequests(const json::Node& base_requests) {

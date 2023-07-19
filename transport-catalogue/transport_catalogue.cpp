@@ -2,7 +2,7 @@
 
 namespace catalogue {
 using namespace std;
-
+    
 void TransportCatalogue::AddStop(const Stop& stop) {
     stops_.push_back(stop);
     stop_names_to_ptrs_[stops_.back().name] = &stops_.back();
@@ -89,8 +89,11 @@ const std::unordered_map<std::string_view, const Stop*>& TransportCatalogue::Get
     return stop_names_to_ptrs_;
 }
     
+const std::unordered_map<std::pair<const Stop*, const Stop*>, int64_t, detail::PairHasher<const Stop*>> TransportCatalogue::GetAllDistances() const {
+    return stop_distances_;
+}    
+    
 size_t TransportCatalogue::GetStopsCount() const {
     return stops_.size();
 }
-
 } // namespace catalogue

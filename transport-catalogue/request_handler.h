@@ -2,6 +2,7 @@
 #include "json_builder.h"
 #include "json_reader.h"
 #include "map_renderer.h"
+#include "serialization.h"
 
 namespace catalogue {
 namespace handler {
@@ -15,7 +16,20 @@ public:
                    json::Builder& builder,
                    JsonReader& reader,
                    MapRenderer& renderer,
-                   TransportRouter& router);
+                   TransportRouter& router,
+                   Serializer& serializer);
+    
+    void MakeBase(TransportCatalogue& catalogue,
+                  std::istream& input,
+                  MapRenderer& renderer,
+                  TransportRouter& router,
+                  Serializer& serializer);
+    
+    void ProcessRequests(TransportCatalogue& catalogue,
+                    std::istream& input,
+                    std::ostream& out,
+                    TransportRouter& router,
+                    Serializer& serializer);
     
     void MakeResponse(std::ostream& out, const json::Node& stat_requests);
     
@@ -45,6 +59,8 @@ private:
     JsonReader& json_rd_;
     MapRenderer& renderer_;
     TransportRouter& router_;
+    Serializer& serializer_;
+    
 };
     
 } // namespace handler

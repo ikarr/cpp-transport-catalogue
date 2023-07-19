@@ -9,8 +9,8 @@
 #include <unordered_set>
 
 namespace catalogue {
-    
 namespace detail {
+    
 template <typename T>
 struct PairHasher {
     std::hash<T> hasher;
@@ -42,6 +42,8 @@ public:
     const std::map<std::string_view, const Bus*>& GetAllBuses() const;
     
     const std::unordered_map<std::string_view, const Stop*>& GetAllStops() const;
+    
+    const std::unordered_map<std::pair<const Stop*, const Stop*>, int64_t, detail::PairHasher<const Stop*>> GetAllDistances() const;
     
     size_t GetStopsCount() const;
     
